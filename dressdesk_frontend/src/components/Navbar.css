@@ -1,0 +1,113 @@
+
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(90deg, #ff6f61, #ff9770);
+  padding: 12px 28px;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+}
+
+.navbar-logo a {
+  color: #fff;
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+}
+
+.navbar-links {
+  display: flex;
+  list-style: none;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  gap: 18px;
+}
+
+.navbar-links li {
+  margin: 0;
+}
+
+.navbar-links li a {
+  color: #ffecec;
+  text-decoration: none;
+  font-size: 0.98rem;
+  font-weight: 500;
+  padding: 6px 10px;
+  border-radius: 999px;
+  transition: background-color 0.2s, color 0.2s, transform 0.2s;
+}
+
+.navbar-links li a:hover {
+  background-color: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.cart-link {
+  display: inline-flex;
+  align-items: center;
+  font-weight: 600;
+  background-color: rgba(255, 255, 255, 0.18);
+  padding: 6px 14px;
+}
+
+.cart-link svg {
+  margin-right: 5px;
+}
+
+.user-dropdown {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #fff;
+}
+
+.user-name {
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background-color: rgba(255, 255, 255, 0.16);
+}
+
+.logout-btn {
+  background-color: #fff;
+  color: #ff6f61;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: background-color 0.2s, color 0.2s, transform 0.2s;
+}
+
+.logout-btn:hover {
+  background-color: #ffecec;
+  color: #ff4a3c;
+  transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+  .navbar {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 10px 16px;
+  }
+
+  .navbar-links {
+    flex-direction: column;
+    width: 100%;
+    align-items: flex-start;
+    margin-top: 8px;
+  }
+
+  .navbar-links li {
+    margin: 4px 0;
+  }
+}

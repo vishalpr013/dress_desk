@@ -1,0 +1,48 @@
+# --- OS / editor junk ---
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*.tmp
+*.log
+
+# --- Python / Django ---
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+*.sqlite3
+db.sqlite3
+
+env/
+venv/
+.venv/
+*/venv/
+
+*.pot
+*.pyproject-local
+
+# Django collected/static files (if you add them later)
+staticfiles/
+media/
+
+# --- Node / React (frontend) ---
+dressdesk_frontend/node_modules/
+dressdesk_frontend/build/
+
+# Environment / secrets
+.env
+.env.*
+
+# --- Tooling / IDE / Cursor ---
+.vscode/
+.idea/
+.pytest_cache/
+.mypy_cache/
+
+.cursor/
+*/.cursor/
+
+terminals/
+
