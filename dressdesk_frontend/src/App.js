@@ -16,26 +16,28 @@ import FAQs from './pages/FAQs';
 function App() {
   return (
     <AuthProvider>
-    <CartProvider>
-      <Router>
-        <Navbar />
+      <CartProvider>
+        <Router>
+          <div className="App">
+            <Navbar />
 
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/cart" element={<Cart />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/products" element={<Products />} />
-          <Route path="/products/:id" element={<ProductDetail />} />
-          <Route path="/bill" element={<Bill />} />
-          <Route path="/faqs" element={<FAQs />} />
+            <div style={{ flex: 1, minHeight: 'calc(100vh - 200px)' }}>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/cart" element={<Cart />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/products" element={<Products />} />
+                <Route path="/products/:id" element={<ProductDetail />} />
+                <Route path="/bill" element={<Bill />} />
+                <Route path="/faqs" element={<FAQs />} />
+              </Routes>
+            </div>
 
-
-        </Routes>
-
-        <Footer />
-      </Router>
-    </CartProvider>
+            <Footer />
+          </div>
+        </Router>
+      </CartProvider>
     </AuthProvider>
   );
 }
