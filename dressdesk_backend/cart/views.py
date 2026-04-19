@@ -11,7 +11,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
 from products.models import Product
-from .models import Cart, CartItem
+from .models import Cart, CartItem, Order, OrderItem
 
 
 def _get_cart(user) -> Cart:
@@ -236,3 +236,174 @@ def cart_download_pdf(request):
     resp["Content-Disposition"] = f'attachment; filename="order_{request.user.username}.pdf"'
     return resp
 
+
+# ── Order / Checkout ─────────────────────────────────────────────────
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def checkout(request):
+    """Convert the current cart into a persisted Order, clear the cart, return order data."""
+    cart = _get_cart(request.user)
+    cart_data = _serialize_cart(cart)
+
+    if not cart_data["items"]:
+        return Response({"error": "Cart is empty"}, status=status.HTTP_400_BAD_REQUEST)
+
+    order = Order.objects.create(
+        user=request.user,
+        total_items=cart_data["totalItems"],
+        total_price=cart_data["totalPrice"],
+    )
+
+    order_items = []
+    for it in cart_data["items"]:
+        order_items.append(
+            OrderItem(
+                order=order,
+                product_id=it["id"],
+                product_name=it["name"],
+                product_price=it["price"],
+                selected_size=it.get("selectedSize", ""),
+                quantity=it["quantity"],
+                line_total=it["lineTotal"],
+            )
+        )
+    OrderItem.objects.bulk_create(order_items)
+
+    # clear the cart
+    cart.items.all().delete()
+
+    return Response(
+        {
+            "message": "Order placed successfully!",
+            "order": _serialize_order(order),
+        },
+        status=201,
+    )
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def order_history(request):
+    """Return all orders for the authenticated user, newest first."""
+    orders = Order.objects.filter(user=request.user).prefetch_related("items")
+    data = [_serialize_order(o) for o in orders]
+    return Response(data, status=200)
+
+
+def _serialize_order(order: Order):
+    items = []
+    for oi in order.items.all():
+        items.append(
+            {
+                "productName": oi.product_name,
+                "productPrice": oi.product_price,
+                "selectedSize": oi.selected_size,
+                "quantity": oi.quantity,
+                "lineTotal": oi.line_total,
+            }
+        )
+    return {
+        "id": order.id,
+        "totalItems": order.total_items,
+        "totalPrice": order.total_price,
+        "createdAt": order.created_at.isoformat(),
+        "items": items,
+    }
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def download_orders_pdf(request):
+    """Generate a single PDF report of all past orders for the authenticated user."""
+    orders = Order.objects.filter(user=request.user).prefetch_related("items")
+
+    buffer = io.BytesIO()
+    p = canvas.Canvas(buffer, pagesize=A4)
+    width, height = A4
+
+    # ── Title page header ────────────────────────────────────────────
+    p.setFont("Helvetica-Bold", 18)
+    p.drawString(150, height - 50, "DressDesk — Order History")
+
+    p.setFont("Helvetica", 11)
+    p.drawString(50, height - 80, f"Buyer: {request.user.username}")
+    p.drawString(50, height - 100, f"Total Orders: {orders.count()}")
+
+    y = height - 140
+
+    if not orders.exists():
+        p.setFont("Helvetica", 12)
+        p.drawString(50, y, "No orders found.")
+        p.showPage()
+        p.save()
+        pdf = buffer.getvalue()
+        buffer.close()
+        resp = HttpResponse(pdf, content_type="application/pdf")
+        resp["Content-Disposition"] = f'attachment; filename="order_history_{request.user.username}.pdf"'
+        return resp
+
+    for order in orders:
+        # ── Order header ─────────────────────────────────────────────
+        if y < 160:
+            p.showPage()
+            y = height - 50
+
+        p.setStrokeColorRGB(0.9, 0.3, 0.25)
+        p.setFillColorRGB(0.9, 0.3, 0.25)
+        p.rect(45, y - 5, width - 90, 22, fill=True, stroke=False)
+        p.setFillColorRGB(1, 1, 1)
+        p.setFont("Helvetica-Bold", 11)
+        order_date = order.created_at.strftime("%d %b %Y, %I:%M %p")
+        p.drawString(55, y, f"Order #{order.id}  —  {order_date}")
+        p.drawRightString(width - 55, y, f"Total: ₹{order.total_price:.2f}")
+
+        y -= 30
+        p.setFillColorRGB(0, 0, 0)
+
+        # table header
+        p.setFont("Helvetica-Bold", 10)
+        p.drawString(55, y, "Product")
+        p.drawString(280, y, "Size")
+        p.drawString(340, y, "Qty")
+        p.drawString(400, y, "Price")
+        p.drawString(480, y, "Total")
+        y -= 15
+        p.setStrokeColorRGB(0.8, 0.8, 0.8)
+        p.line(55, y + 4, width - 55, y + 4)
+
+        # items
+        p.setFont("Helvetica", 10)
+        for oi in order.items.all():
+            y -= 16
+            if y < 60:
+                p.showPage()
+                y = height - 50
+                p.setFont("Helvetica", 10)
+
+            name = str(oi.product_name)[:35]
+            p.drawString(55, y, name)
+            p.drawString(280, y, oi.selected_size or "—")
+            p.drawString(340, y, str(oi.quantity))
+            p.drawString(400, y, f"{oi.product_price:.2f}")
+            p.drawString(480, y, f"{oi.line_total:.2f}")
+
+        # order footer line
+        y -= 10
+        p.setStrokeColorRGB(0.8, 0.8, 0.8)
+        p.line(55, y + 4, width - 55, y + 4)
+        y -= 14
+        p.setFont("Helvetica-Bold", 10)
+        p.drawString(55, y, f"Items: {order.total_items}")
+        p.drawRightString(width - 55, y, f"Grand Total: ₹{order.total_price:.2f}")
+        y -= 30  # gap before next order
+
+    p.showPage()
+    p.save()
+
+    pdf = buffer.getvalue()
+    buffer.close()
+
+    resp = HttpResponse(pdf, content_type="application/pdf")
+    resp["Content-Disposition"] = f'attachment; filename="order_history_{request.user.username}.pdf"'
+    return resp

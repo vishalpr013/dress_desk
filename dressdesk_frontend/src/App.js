@@ -12,6 +12,7 @@ import { AuthProvider } from './context/AuthContext';
 import ProductDetail from './pages/ProductDetail';
 import Bill from './pages/Bill';
 import FAQs from './pages/FAQs';
+import OrderHistory from './pages/OrderHistory';
 
 function App() {
   return (
@@ -31,6 +32,7 @@ function App() {
                 <Route path="/products/:id" element={<ProductDetail />} />
                 <Route path="/bill" element={<Bill />} />
                 <Route path="/faqs" element={<FAQs />} />
+                <Route path="/orders" element={<OrderHistory />} />
               </Routes>
             </div>
 

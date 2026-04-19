@@ -71,6 +71,16 @@ export const CartProvider = ({ children }) => {
       .then((resp) => setCart(resp.data?.items || []));
   };
 
+  const checkout = async () => {
+    const resp = await axios.post(
+      API_URL + "cart/checkout/",
+      {},
+      { headers: getAuthHeaders() }
+    );
+    setCart([]);          // cart was cleared server-side
+    return resp.data;     // { message, order }
+  };
+
   const { totalItems, totalPrice } = useMemo(() => {
     let ti = 0, tp = 0;
     for (const it of cart) {
@@ -83,7 +93,7 @@ export const CartProvider = ({ children }) => {
 
   return (
     <CartContext.Provider
-      value={{ cart, addToCart, removeFromCart, decrementItem, clearCart, totalItems, totalPrice }}
+      value={{ cart, addToCart, removeFromCart, decrementItem, clearCart, checkout, totalItems, totalPrice }}
     >
       {children}
     </CartContext.Provider>
@@ -91,3 +101,4 @@ export const CartProvider = ({ children }) => {
 };
 
 export const useCart = () => useContext(CartContext);
+

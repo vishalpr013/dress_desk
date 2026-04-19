@@ -35,6 +35,7 @@ const Navbar = () => {
 
         {user ? (
           <li className="user-dropdown">
+            <Link to="/orders">My Orders</Link>
             <span className="user-name">{displayName}</span>
             <button className="logout-btn" onClick={handleLogout}>
               Logout

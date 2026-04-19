@@ -7,7 +7,7 @@ import { getAuthHeaders } from "../services/auth";
 import "./Cart.css";
 
 const Cart = () => {
-  const { cart, addToCart, removeFromCart, decrementItem, clearCart, totalItems, totalPrice } = useCart();
+  const { cart, addToCart, removeFromCart, decrementItem, clearCart, checkout, totalItems, totalPrice } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -22,7 +22,17 @@ const Cart = () => {
 
   const handleBuyNow = async () => {
     if (!requireLogin()) return;
-    // Download per-user PDF from backend (Token auth requires header, so use blob download).
+    try {
+      await checkout();
+      navigate("/orders");
+    } catch (e) {
+      console.error("Checkout failed:", e);
+      alert("Could not complete your purchase. Please try again.");
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    if (!requireLogin()) return;
     try {
       const resp = await axios.get("http://127.0.0.1:8000/api/cart/download/pdf/", {
         headers: getAuthHeaders(),
@@ -111,6 +121,7 @@ const Cart = () => {
           Clear Cart
         </button>
         <button className="buy-btn" onClick={handleBuyNow}>Buy Now</button>
+        <button className="clear-btn" onClick={handleDownloadPDF} style={{marginLeft: 8}}>⬇ Download PDF</button>
       </div>
     </div>
   );
